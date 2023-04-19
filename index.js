@@ -22,6 +22,8 @@ class CapSolver {
   /**
    * @typedef {{
    *  appId: String? // Your developer appId, Apply in dashboard's developer section
+   *  verbose: Boolean? // Whether to print the current status
+   *  verboseIdentifier: String? // The identifier of the current instance, used to distinguish between multiple instances
    * }} CapSolverOptions
    */
   /**
@@ -271,6 +273,17 @@ class CapSolver {
    * @property {String} html You can pass in the entire html source code for the challenge directly. The page contains the window._cf_chl_opt attribute. Support base64 string
    * @property {String} proxy Read about using proxies at https://docs.capsolver.com/guide/api-how-to-use-proxy.html
    */
+
+  async delay(ms) {
+    return await new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  async verbose(log) {
+    if (this.#options?.verbose || false) {
+      const verboseIdentifier = this.#options?.verboseIdentifier ? `${this.#options?.verboseIdentifier} ` : "";
+      console.log(`${verboseIdentifier}${log}`);
+    }
+  }
   /**
    * @typedef {(ImageToTextTask|HCaptchaClassification|FunCaptchaClassification|ReCaptchaV2Classification|AwsWafClassification)} RecognitionTask
    */
@@ -357,14 +370,29 @@ class CapSolver {
    * @returns {Promise<CapSolverSolveTaskResult>}
    */
   async solve(task) {
+    if (!task) return {
+      errorCode: 'ERROR_INVALID_TASK_DATA',
+      errorDescription: 'Missing task data.',
+      errorId: 1
+    }
+
     const response = await this.createTask(task);
-    if (response.status === "ready") return response;
+    if (response.status === "ready" || response.errorId === 1) return response;
     const taskId = response.taskId;
+
+    this.verbose(`[${taskId}] Created [${task.type}].`)
+
     while (true) {
       const result = await this.getTaskResult(taskId);
-      if (result.status === "ready") return result;
-      if (result.errorId === 1) throw new Error(result.errorDescription);
-      await new Promise((resolve) => setTimeout(resolve, 2500));
+      if (result.status === "ready" || result.errorId === 1) {
+        const verboseMessage = result?.status === "ready" ? `Solved!` : `Failed!`;
+        this.verbose(`[${taskId}] ${verboseMessage}`);
+
+        return result;
+      }
+
+      this.verbose(`[${taskId}] Waiting 2500ms...`);
+      await this.delay(2500)
     }
   }
 }
