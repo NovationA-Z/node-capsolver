@@ -12,7 +12,7 @@ $ npm install node-capsolver
 ```
 Using yarn:
 ```
-$ yarn install node-capsolver
+$ yarn add node-capsolver
 ```
 
 ## Examples
