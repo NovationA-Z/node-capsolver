@@ -2,7 +2,7 @@
 ### An API wrapper for CapSolver.com written in Node.js
 ## Table of Contents
 - [Installing](#Installing)
-- [Examples](#Example)
+- [Examples](#Examples)
 - [API](#API)
 ## Installing
 ### Package manager
