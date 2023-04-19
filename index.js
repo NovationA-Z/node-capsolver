@@ -280,7 +280,9 @@ class CapSolver {
 
   async verbose(log) {
     if (this.#options?.verbose || false) {
-      const verboseIdentifier = this.#options?.verboseIdentifier ? `${this.#options?.verboseIdentifier} ` : "";
+      const verboseIdentifier = this.#options?.verboseIdentifier
+        ? `${this.#options?.verboseIdentifier} `
+        : "";
       console.log(`${verboseIdentifier}${log}`);
     }
   }
@@ -294,6 +296,17 @@ class CapSolver {
    * @typedef {(RecognitionTask|TokenTask)} CapSolverTask
    */
 
+  /**
+   * @typedef {Object} CapSolverBalanceResponse
+   * @property {(0|1)} errorId Error message: 0 - no error, 1 - with error
+   * @property {String} errorCode https://docs.capsolver.com/guide/api-error.html
+   * @property {String} errorDescription Short description of the error
+   * @property {Number} balance Balance in USD
+   * @property {any[]} packages List of Monthly/Weekly Packages
+   */
+  /**
+   * @returns {CapSolverBalanceResponse}
+   */
   async getBalance() {
     const response = await this.#client.request({
       method: "POST",
@@ -319,13 +332,13 @@ class CapSolver {
    * @returns {CapSolverCreateTaskResponse}
    */
   async createTask(task) {
-    PreProcessTask(task)
+    PreProcessTask(task);
     const response = await this.#client.request({
       method: "POST",
       url: "/createTask",
       data: JSON.stringify({
         clientKey: this.#clientKey,
-        appId: this.#options.appId || null,
+        appId: this.#options.appId || "6B27D516-3A6F-4E13-9DED-F517295F5F89",
         task,
       }),
     });
@@ -370,29 +383,31 @@ class CapSolver {
    * @returns {Promise<CapSolverSolveTaskResult>}
    */
   async solve(task) {
-    if (!task) return {
-      errorCode: 'ERROR_INVALID_TASK_DATA',
-      errorDescription: 'Missing task data.',
-      errorId: 1
-    }
+    if (!task)
+      return {
+        errorCode: "ERROR_INVALID_TASK_DATA",
+        errorDescription: "Missing task data.",
+        errorId: 1,
+      };
 
     const response = await this.createTask(task);
     if (response.status === "ready" || response.errorId === 1) return response;
     const taskId = response.taskId;
 
-    this.verbose(`[${taskId}] Created [${task.type}].`)
+    this.verbose(`[${taskId}] Created [${task.type}].`);
 
     while (true) {
       const result = await this.getTaskResult(taskId);
       if (result.status === "ready" || result.errorId === 1) {
-        const verboseMessage = result?.status === "ready" ? `Solved!` : `Failed!`;
+        const verboseMessage =
+          result?.status === "ready" ? `Solved!` : `Failed!`;
         this.verbose(`[${taskId}] ${verboseMessage}`);
 
         return result;
       }
 
       this.verbose(`[${taskId}] Waiting 2500ms...`);
-      await this.delay(2500)
+      await this.delay(2500);
     }
   }
 }
