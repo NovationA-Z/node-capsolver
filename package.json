@@ -3,6 +3,14 @@
   "version": "1.0.3",
   "description": "",
   "main": "index.js",
+  "keywords": [
+    "nodejs",
+    "captcha",
+    "captcha-solving",
+    "capsolver",
+    "capsolvercom",
+    "capsolver-library"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/NovationA-Z/node-capsolver.git"
