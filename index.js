@@ -80,7 +80,7 @@ class CapSolver {
    */
   /**
    * @typedef {Object} HCaptchaTask
-   * @property {('HCaptchaTask'|'HCaptchaEnterpriseTask'|'HCaptchaTurboTask')} type
+   * @property {('HCaptchaTask'|'HCaptchaTurboTask')} type
    * @property {String} websiteURL Web address of the website using hcaptcha, generally it's fixed value. (Ex: https://google.com)
    * @property {String} websiteKey The domain public key, rarely updated. (Ex: b989d9e8-0d14-41sda0-870f-97b5283ba67d)
    * @property {String} proxy Read about using proxies at https://docs.capsolver.com/guide/api-how-to-use-proxy.html
@@ -91,7 +91,7 @@ class CapSolver {
    */
   /**
    * @typedef {Object} HCaptchaTaskProxyLess
-   * @property {('HCaptchaTaskProxyLess'|'HCaptchaEnterpriseTaskProxyLess'|'HCaptchaTurboTaskProxyLess')} type
+   * @property {('HCaptchaTaskProxyLess')} type
    * @property {String} websiteURL Web address of the website using hcaptcha, generally it's fixed value. (Ex: https://google.com)
    * @property {String} websiteKey The domain public key, rarely updated. (Ex: b989d9e8-0d14-41sda0-870f-97b5283ba67d)
    * @property {Boolean} [isInvisible] Set true if it's a invisible captcha
@@ -254,7 +254,7 @@ class CapSolver {
    * @property {String} proxy Read about using proxies at https://docs.capsolver.com/guide/api-how-to-use-proxy.html
    */
   /**
-   * @typedef {Object} DatadomeSliderTask
+   * @typedef {Object} DatadomeSlider
    * @property {'DatadomeSliderTask'} type
    * @property {String} websiteURL The address of the target page.
    * @property {String} captchaUrl if the url contains t=bv that means that your ip must be banned, t should be t=fe
@@ -262,7 +262,7 @@ class CapSolver {
    * @property {String} userAgent Browser's User-Agent which is used in emulation. It is required that you use a signature of a modern browser, otherwise Google will ask you to "update your browser".
    */
   /**
-   * @typedef {Object} AntiCloudflareTask
+   * @typedef {Object} AntiCloudflare
    * @property {'AntiCloudflareTask'} type
    * @property {String} websiteURL The address of the target page.
    * @property {String} websiteKey Turnstile website key.
@@ -270,9 +270,62 @@ class CapSolver {
    * @property {String} metadata.type challenge or turnstile fixed value.
    * @property {String} [metadata.action] The value of the data-action attribute of the Turnstile element if it exists.
    * @property {String} [metadata.cdata] The value of the data-cdata attribute of the Turnstile element if it exists.
-   * @property {String} html You can pass in the entire html source code for the challenge directly. The page contains the window._cf_chl_opt attribute. Support base64 string
    * @property {String} proxy Read about using proxies at https://docs.capsolver.com/guide/api-how-to-use-proxy.html
    */
+
+  /**
+   * @typedef {Object} AwsWafCaptcha
+   * @property {'AntiAwsWafTask'|'AntiAwsWafTaskProxyLess'} type
+   * @property {String} websiteURL The URL of the page that returns the captcha info.
+   * @property {String} awsKey When the status code returned by the websiteURL page is 405, you need to pass in awsKey.
+   * @property {String} awsIv When the status code returned by the websiteURL page is 405, you need to pass in awsIv
+   * @property {String} awsContext When the status code returned by the websiteURL page is 405, you need to pass in awsContext
+   * @property {String} awsChallengeJS When the status code returned by the websiteURL page is 202, you only need to pass in awsChallengeJs;
+   * @property {String} [proxy] Read about using proxies at https://docs.capsolver.com/guide/api-how-to-use-proxy.html
+   */
+
+  /**
+   * @typedef {Object} CyberSiAra
+   * @property {'AntiCyberSiAraTask'|'AntiCyberSiAraTaskProxyLess'} type
+   * @property {String} websiteURL The address of the target page.
+   * @property {String} SlideMasterUrlId you can get MasterUrlId param form api/CyberSiara/GetCyberSiara endpoint
+   * @property {String} UserAgent browser userAgent,you need submit your userAgent
+   * @property {String} [proxy] Read about using proxies at https://docs.capsolver.com/guide/api-how-to-use-proxy.html
+   */
+
+  /**
+   * @typedef {Object} Imperva
+   * @property {'AntiImpervaTask'|'AntiImpervaTaskProxyLess'} type
+   * @property {String} websiteURL The address of the target page.
+   * @property {String} userAgent browser userAgent,you need submit your userAgent
+   * @property {String} [proxy] Read about using proxies at https://docs.capsolver.com/guide/api-how-to-use-proxy.html
+   * @property {Boolean} [utmvc] if cookie contains incap_see_xxx,nlbi_xxx,visid_inap_xxx, mean is true
+   * @property {Boolean} [reese84] if cookie conains reese84, set it true
+   * @property {String} [reeseScriptUrl] The URL typically has several dashes (-) and random words
+   * @property {Array} [cookies] you can send your cookies
+   * @property {String} [reeseToken] al	If your reeseToken has expired, you can send current reeseToken to obtain a new reeseToken.
+   */
+
+  /**
+ * @typedef {Object} AkamaiBMP
+ * @property {'AntiAkamaiBMPTask'} type
+ * @property {String} packageName Package name of AkamaiBMP mobile APP, e.g., "de.zalando.iphone".
+ * @property {String} [version="3.2.6"] AKAMAI BMP Version number. Maximum supported version is 3.3.1.
+ * @property {String} [deviceId] If you want to have a fixed device ID in the sensor, you can pass this parameter.
+ * @property {String} [deviceName="random"] Input fixed deviceInfo, e.g., "iPhone14,2/16.0.2".
+ * @property {Int64} [count] Sensor combinations acquired at once, between 0 and 50 (inclusive). Maximum of 50 items can be acquired at once.
+ * @property {String} [pow] Support: "/_bm/get_params" data. If passed, other parameters will be ignored to generate the pow string. Example data: {"mode":1,"nonce":"3764bd11365749ec62974f920eb3614c","ttl":21600,"difficulty":6000,"timeout":100,"n":490,"s_timeout":100,"checksum":"plKZ9lBBJwLeeWRjoaZ4OevBFoPf3EyJIFgp2utWwI3ly34OsW6JluR2nY+lAwapZAcMf/kCo2g5ni6daXPhBSpg=="}.
+ */
+
+  /**
+ * @typedef {Object} AkamaiWeb
+ * @property {'AntiAkamaiWebTask'} type Task type for getting sensor data using an independent endpoint for /akamaiweb/invoke.
+ * @property {String} url The browser URL address.
+ * @property {String} [abck] The akamai cookie.
+ * @property {String} [bmsz] The akamai cookie.
+ * @property {String} [userAgent] The browser's request header User-Agent (UA).
+ */
+
 
   async delay(ms) {
     return await new Promise((resolve) => setTimeout(resolve, ms));
@@ -290,7 +343,7 @@ class CapSolver {
    * @typedef {(ImageToTextTask|HCaptchaClassification|FunCaptchaClassification|ReCaptchaV2Classification|AwsWafClassification)} RecognitionTask
    */
   /**
-   * @typedef {(HCaptcha|FunCaptcha|GeeTest|ReCaptcha|MTCaptcha|DatadomeSliderTask|AntiCloudflareTask)} TokenTask
+   * @typedef {(HCaptcha|FunCaptcha|GeeTest|ReCaptcha|MTCaptcha|DatadomeSlider|AntiCloudflare|AwsWafCaptcha|CyberSiAra|Imperva|AkamaiBMP|AkamaiWeb)} TokenTask
    */
   /**
    * @typedef {(RecognitionTask|TokenTask)} CapSolverTask
