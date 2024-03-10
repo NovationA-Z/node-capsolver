@@ -81,6 +81,8 @@ In general, the `CapSolver.solve()` function is all you need. It combines create
 
 `async CapSolver.getTaskResult(taskId)`
 
+`async CapSolver.feedbackTask(taskId, result)`
+
 `async CapSolver.getBalance()`
 
 When using an IDE that supports JSDoc, you will get suggestions of properties the task supports. To get the best suggestions, specify the `type` first.
