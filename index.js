@@ -50,7 +50,7 @@ class CapSolver {
    * @typedef {Object} ImageToTextTask
    * @property {'ImageToTextTask'} type
    * @property {String|import('buffer').Buffer} body base64 encoded content of the image (no newlines) (no data:image/*********; base64, content
-   * @property {('mtcaptcha'|'dell'|'queueit'|'amazon'|'amazon-gif'|'common')} [module] Specifies the module
+   * @property {('mtcaptcha'|'dell'|'queueit'|'amazon'|'amazon-gif'|'common'|'mark'|'queue-it'|'io-bs-mou'|'cargo'|'webde-login'|'webde-register'|'webde-imap'|'cybersiara'|'enzo'|'euro')} [module] Specifies the module
    * @property {Number} [score] 0.8 ~ 1, Identify the matching degree. If the recognition rate is not within the range, no deduction
    * @property {Boolean} [case] Case sensitive or not
    */
@@ -421,6 +421,41 @@ class CapSolver {
     });
     return JSON.parse(response.data);
   }
+
+  /**
+   * @typedef FeedbackTaskResult
+   * @property {Boolean} invalid Whether the results of task processing pass validation
+   * @property {Number} code Error code [optional]
+   * @property {String} message Error message [optional]
+   */
+
+  /**
+   * @typedef CapSolverFeedbackTaskResponse
+   * @property {(0|1)} errorId Error message: 0 - no error, 1 - with error
+   * @property {String} errorCode https://docs.capsolver.com/guide/api-error.html
+   * @property {String} errorDescription Error description
+   * @property {String} message Returns the messages
+   */
+
+  /**
+   * @param {String} taskId 
+   * @param {FeedbackTaskResult} result 
+   * @returns {Promise<CapSolverFeedbackTaskResponse>}
+   */
+  async feedbackTask(taskId, result) {
+    const response = await this.#client.request({
+      method: "POST",
+      url: "/feedbackTask",
+      data: JSON.stringify({
+        clientKey: this.#clientKey,
+        appId: this.#options.appId || "6B27D516-3A6F-4E13-9DED-F517295F5F89",
+        taskId,
+        result,
+      }),
+    });
+    return JSON.parse(response.data);
+  }
+
   /**
    * @typedef CapSolverSolveTaskResult
    * @property {(0|1)} errorId Error message: 0 - no error, 1 - with error

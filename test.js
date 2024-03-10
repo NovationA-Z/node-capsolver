@@ -10,7 +10,7 @@ solver.getBalance().then(data => {
     if (data?.balance > 0) {
         solver.solve({
             type: "ImageToTextTask",
-            body: fs.readFileSync('captcha.png') // The library will automatically convert buffers into base64	strings for you
+            body: fs.readFileSync('captcha.png') // The library will automatically convert buffers into base64 strings for you
         }).then((task) => {
             console.log(task.solution.text)
         })
