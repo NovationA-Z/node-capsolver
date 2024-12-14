@@ -1,22 +1,33 @@
 # 🤖 CapSolver ✔️
-### An API wrapper for CapSolver.com written in Node.js
+
+## An API wrapper for CapSolver.com written in Node.js
+
 ## Table of Contents
-- [Installing](#Installing)
-- [Examples](#Examples)
-- [API](#API)
+
+- [Installing](#installing)
+- [Examples](#examples)
+- [API](#api)
+
 ## Installing
+
 ### Package manager
+
 Using npm:
+
+```bash
+npm install node-capsolver
 ```
-$ npm install node-capsolver
-```
+
 Using yarn:
-```
-$ yarn add node-capsolver
+
+```bash
+yarn add node-capsolver
 ```
 
 ## Examples
+
 ### [ImageToTextTask](https://docs.capsolver.com/guide/recognition/ImageToTextTask.html)
+
 ```js
 const CapSolver = require('node-capsolver')
 const fs = require('fs')
@@ -30,7 +41,7 @@ solver.getBalance().then(data => {
     if (data?.balance > 0) {
         solver.solve({
             type: "ImageToTextTask",
-            body: fs.readFileSync('captcha.png') // The library will automatically convert buffers into base64	strings for you
+            body: fs.readFileSync('captcha.png') // The library will automatically convert buffers into base64 strings for you
         }).then((task) => {
             console.log(task.solution.text)
         })
@@ -39,21 +50,23 @@ solver.getBalance().then(data => {
     }
 })
 ```
-### [HCaptchaTaskProxyless](https://docs.capsolver.com/guide/captcha/HCaptcha.html)
+
+### [ReCaptchaV2TaskProxyLess](https://docs.capsolver.com/en/guide/captcha/ReCaptchaV2/)
+
 ```js
 const CapSolver = require('node-capsolver')
 const axios = require("axios").default;
 const { JSDOM } = require('jsdom');
 
 (async () => {
-    let demoURL = "https://maximedrn.github.io/hcaptcha-solver-python-selenium/";
+    let demoURL = "https://www.google.com/recaptcha/api2/demo";
     let resp = await axios({
         method: "GET",
         url: demoURL,
     })
 
     const dom = new JSDOM(resp.data)
-    const siteKey = dom.window.document.querySelector('.h-captcha').getAttribute('data-sitekey');
+    const siteKey = dom.window.document.querySelector('#recaptcha-demo').getAttribute('data-sitekey');
 
     const handler = new CapSolver('CAI-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX', {
         verbose: true // Optional
@@ -61,7 +74,7 @@ const { JSDOM } = require('jsdom');
     let b = await handler.getBalance();
     if (b.balance > 0) {
         let CapResponse = await handler.solve({
-            type: 'HCaptchaTaskProxyLess',
+            type: 'ReCaptchaV2TaskProxyLess',
             websiteURL: demoURL,
             websiteKey: `${siteKey}`,
         })
@@ -72,7 +85,9 @@ const { JSDOM } = require('jsdom');
     }
 })();
 ```
+
 ## API
+
 In general, the `CapSolver.solve()` function is all you need. It combines createTask() and getTaskResult() into one, meaning you don't need to worry about anything else.
 
 `async CapSolver.solve(task)`
