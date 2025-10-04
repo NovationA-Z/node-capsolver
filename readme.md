@@ -24,6 +24,12 @@ Using yarn:
 yarn add node-capsolver
 ```
 
+Using pnpm:
+
+```bash
+pnpm add node-capsolver
+```
+
 ## Examples
 
 ### [ImageToTextTask](https://docs.capsolver.com/guide/recognition/ImageToTextTask.html)
@@ -95,6 +101,8 @@ In general, the `CapSolver.solve()` function is all you need. It combines create
 `async CapSolver.createTask(task)`
 
 `async CapSolver.getTaskResult(taskId)`
+
+`async CapSolver.getToken(task)`
 
 `async CapSolver.feedbackTask(taskId, result)`
 

@@ -56,8 +56,10 @@ class CapSolver {
     /**
      * @typedef {Object} ImageToTextTask
      * @property {'ImageToTextTask'} type
-     * @property {String|import('buffer').Buffer} body base64 encoded content of the image (no newlines, no data:image/***;charset=utf-8;base64,)
-     * @property {('common'|'module_001'|'module_002'|'module_003'|'module_004'|'module_005'|'module_006'|'module_007'|'module_008'|'module_010'|'module_012'|'module_013'|'module_014'|'module_015'|'module_016'|'module_017'|'module_018'|'module_019'|'module_020'|'module_021'|'module_022'|'module_023'|'module_024'|'module_025'|'module_026'|'module_027'|'module_028')} [module] Specifies the module
+     * @property {String|import('buffer').Buffer} [body] base64 encoded content of the image (no newlines, no data:image/***;charset=utf-8;base64,)
+     * @property {String} [websiteURL] Page source url to improve accuracy
+     * @property {(String|import('buffer').Buffer)[]} [images] Only for number module, Support up to 9 base64 encoded images each time
+     * @property {('common'|'number'|'module_001'|'module_002'|'module_003'|'module_004'|'module_005'|'module_006'|'module_007'|'module_008'|'module_010'|'module_012'|'module_013'|'module_014'|'module_015'|'module_016'|'module_017'|'module_018'|'module_019'|'module_020'|'module_021'|'module_022'|'module_023'|'module_024'|'module_025'|'module_026'|'module_027'|'module_028'|'module_029'|'module_030'|'module_031'|'module_032')} [module] Specifies the module
      * @property {Number} [score] 0.8 ~ 1, Identify the matching degree. If the recognition rate is not within the range, no deduction
      */
     /**
@@ -78,34 +80,24 @@ class CapSolver {
     /**
      * @typedef {Object} VisionEngine
      * @property {('VisionEngine')} type
-     * @property {('slider_1'|'rotate_1'|'space_detection'|'slider_temu_plus'|'select_temu')} module All supported models are shown in the table below
+     * @property {('slider_1'|'rotate_1'|'rotate_2'|'shein'|'space_detection'|'slider_temu_plus'|'select_temu')} module All supported models are shown in the table below
      * @property {String} [websiteURL] Page source url to improve accuracy
      * @property {String} image Base64 encoded content of the image (no newlines, no data:image/***;charset=utf-8;base64,)
-     * @property {String} imageBackground Base64 encoded content of the background image (no newlines, no data:image/***;charset=utf-8;base64,)
+     * @property {String} [imageBackground] Base64 encoded content of the background image (no newlines, no data:image/***;charset=utf-8;base64,)
      * @property {String} [question] Space detection requires
      */
 
     /**
-     * @typedef {Object} GeeTestTask
-     * @property {('GeeTestTask')} type
-     * @property {String} websiteURL Web address of the website using geetest, generally it's fixed value. (Ex: https://geetest.com)
-     * @property {String} gt The domain gt field.
-     * @property {String} challenge If you need to solve Geetest V3 you must use this parameter, don't need if you need to solve GeetestV4
-     * @property {String} [captchaId] If you need to solve Geetest V4 you must use this parameter, don't need if you need to solve GeetestV3
-     * @property {String} [geetestApiServerSubdomain] Special api subdomain
-     */
-    /**
      * @typedef {Object} GeeTestTaskProxyLess
      * @property {('GeeTestTaskProxyLess')} type
      * @property {String} websiteURL Web address of the website using geetest, generally it's fixed value. (Ex: https://geetest.com)
-     * @property {String} gt The domain gt field.
-     * @property {String} challenge If you need to solve Geetest V3 you must use this parameter, don't need if you need to solve GeetestV4
-     * @property {String} proxy Read about using proxies at https://docs.capsolver.com/guide/api-how-to-use-proxy.html
-     * @property {String} [captchaId] If you need to solve Geetest V4 you must use this parameter, don't need if you need to solve GeetestV3
+     * @property {String} [gt] The domain gt field. (Required for V3)
+     * @property {String} [challenge] Required for Geetest V3, not needed for GeetestV4
+     * @property {String} [captchaId] Required for Geetest V4, not needed for GeetestV3
      * @property {String} [geetestApiServerSubdomain] Special api subdomain
      */
     /**
-     * @typedef {(GeeTestTask|GeeTestTaskProxyLess)} GeeTest
+     * @typedef {GeeTestTaskProxyLess} GeeTest
      */
     /**
      * @typedef {Object} Cookie
@@ -118,8 +110,11 @@ class CapSolver {
      * @property {String} websiteURL Web address of the website using ReCaptcha, generally it's fixed value. (Ex: https://google.com)
      * @property {String} websiteKey The domain public key, rarely updated. (Ex: b989d9e8-0d14-41sda0-870f-97b5283ba67d)
      * @property {String} proxy Read about using proxies at https://docs.capsolver.com/guide/api-how-to-use-proxy.html
-     * @property {String} [pageAction] some site in /anchor endpoint have sa param, it’s action value
+     * @property {String} [pageAction] For ReCaptchaV2, if there is an sa parameter in the payload of the /anchor endpoint, please submit its value
+     * @property {String} [recaptchaDataSValue] For ReCaptchaV2 normal version, if there is an s parameter in the payload of the /anchor endpoint, please submit its value
      * @property {Boolean} [isInvisible] if recaptcha don't have pageAction, reload request body content flag have "fi"
+     * @property {Boolean} [isSession] Session mode, when enabled, will return a recaptcha-ca-t value, which is used as a cookie
+     * @property {String} [apiDomain] The domain name for loading the captcha. (Ex: http://www.google.com/ or http://www.recaptcha.net/)
      * @property {Cookie[]} [cookies] Learn using cookies: https://docs.capsolver.com/en/guide/api-how-to-use-cookies/
      */
     /**
@@ -127,8 +122,11 @@ class CapSolver {
      * @property {('ReCaptchaV2TaskProxyLess')} type
      * @property {String} websiteURL Web address of the website using ReCaptcha, generally it's fixed value. (Ex: https://google.com)
      * @property {String} websiteKey The domain public key, rarely updated. (Ex: b989d9e8-0d14-41sda0-870f-97b5283ba67d)
-     * @property {String} [pageAction] some site in /anchor endpoint have sa param, it’s action value
+     * @property {String} [pageAction] For ReCaptchaV2, if there is an sa parameter in the payload of the /anchor endpoint, please submit its value
+     * @property {String} [recaptchaDataSValue] For ReCaptchaV2 normal version, if there is an s parameter in the payload of the /anchor endpoint, please submit its value
      * @property {Boolean} [isInvisible] if recaptcha don't have pageAction, reload request body content flag have "fi"
+     * @property {Boolean} [isSession] Session mode, when enabled, will return a recaptcha-ca-t value, which is used as a cookie
+     * @property {String} [apiDomain] The domain name for loading the captcha. (Ex: http://www.google.com/ or http://www.recaptcha.net/)
      * @property {Cookie[]} [cookies] Learn using cookies: https://docs.capsolver.com/en/guide/api-how-to-use-cookies/
      */
     /**
@@ -137,9 +135,10 @@ class CapSolver {
      * @property {String} websiteURL Web address of the website using ReCaptcha, generally it's fixed value. (Ex: https://google.com)
      * @property {String} websiteKey The domain public key, rarely updated. (Ex: b989d9e8-0d14-41sda0-870f-97b5283ba67d)
      * @property {String} proxy Read about using proxies at https://docs.capsolver.com/guide/api-how-to-use-proxy.html
-     * @property {String} [pageAction] some site in /anchor endpoint have sa param, it’s action value
-     * @property {Object} [enterprisePayload] Enterprise Payload
+     * @property {String} [pageAction] For ReCaptchaV2, if there is an sa parameter in the payload of the /anchor endpoint, please submit its value
+     * @property {Object} [enterprisePayload] For the enterprise version, search for grecaptcha.enterprise.render and pass the s parameter
      * @property {Boolean} [isInvisible] if recaptcha don't have pageAction, reload request body content flag have "fi"
+     * @property {Boolean} [isSession] Session mode, when enabled, will return a recaptcha-ca-t value, which is used as a cookie
      * @property {String} [apiDomain] Domain address from which to load reCAPTCHA Enterprise. For example: http://www.google.com/ or http://www.recaptcha.net/. Don't use a parameter if you don't know why it's needed.
      * @property {Cookie[]} [cookies] Learn using cookies: https://docs.capsolver.com/en/guide/api-how-to-use-cookies/
      */
@@ -148,9 +147,10 @@ class CapSolver {
      * @property {('ReCaptchaV2EnterpriseTaskProxyLess')} type
      * @property {String} websiteURL Web address of the website using ReCaptcha, generally it's fixed value. (Ex: https://google.com)
      * @property {String} websiteKey The domain public key, rarely updated. (Ex: b989d9e8-0d14-41sda0-870f-97b5283ba67d)
-     * @property {String} [pageAction] some site in /anchor endpoint have sa param, it’s action value
-     * @property {Object} [enterprisePayload] Enterprise Payload
+     * @property {String} [pageAction] For ReCaptchaV2, if there is an sa parameter in the payload of the /anchor endpoint, please submit its value
+     * @property {Object} [enterprisePayload] For the enterprise version, search for grecaptcha.enterprise.render and pass the s parameter
      * @property {Boolean} [isInvisible] if recaptcha don't have pageAction, reload request body content flag have "fi"
+     * @property {Boolean} [isSession] Session mode, when enabled, will return a recaptcha-ca-t value, which is used as a cookie
      * @property {String} [apiDomain] Domain address from which to load reCAPTCHA Enterprise. For example: http://www.google.com/ or http://www.recaptcha.net/. Don't use a parameter if you don't know why it's needed.
      * @property {Cookie[]} [cookies] Learn using cookies: https://docs.capsolver.com/en/guide/api-how-to-use-cookies/
      */
@@ -162,8 +162,10 @@ class CapSolver {
      * @property {'ReCaptchaV3Task'} type
      * @property {String} websiteURL Web address of the website using ReCaptcha, generally it's fixed value. (Ex: https://google.com)
      * @property {String} websiteKey The domain public key, rarely updated. (Ex: b989d9e8-0d14-41sda0-870f-97b5283ba67d)
-     * @property {String} pageAction Widget action value. Website owner defines what user is doing on the page through this parameter. Example: grecaptcha.execute('site_key', {action:'login}).
+     * @property {String} [pageAction] Widget action value. You can find the value of the action parameter by searching for grecaptcha.execute
      * @property {String} proxy Read about using proxies at https://docs.capsolver.com/guide/api-how-to-use-proxy.html
+     * @property {Boolean} [isSession] Session mode, when enabled, will return a recaptcha-ca-t value, which is used as a cookie
+     * @property {String} [apiDomain] The domain name for loading the captcha. (Ex: http://www.google.com/ or http://www.recaptcha.net/)
      * @property {Cookie[]} [cookies] Learn using cookies: https://docs.capsolver.com/en/guide/api-how-to-use-cookies/
      */
     /**
@@ -171,7 +173,9 @@ class CapSolver {
      * @property {'ReCaptchaV3TaskProxyLess'} type
      * @property {String} websiteURL Web address of the website using ReCaptcha, generally it's fixed value. (Ex: https://google.com)
      * @property {String} websiteKey The domain public key, rarely updated. (Ex: b989d9e8-0d14-41sda0-870f-97b5283ba67d)
-     * @property {String} pageAction Widget action value. Website owner defines what user is doing on the page through this parameter. Example: grecaptcha.execute('site_key', {action:'login}).
+     * @property {String} [pageAction] Widget action value. You can find the value of the action parameter by searching for grecaptcha.execute
+     * @property {Boolean} [isSession] Session mode, when enabled, will return a recaptcha-ca-t value, which is used as a cookie
+     * @property {String} [apiDomain] The domain name for loading the captcha. (Ex: http://www.google.com/ or http://www.recaptcha.net/)
      * @property {Cookie[]} [cookies] Learn using cookies: https://docs.capsolver.com/en/guide/api-how-to-use-cookies/
      */
     /**
@@ -179,10 +183,11 @@ class CapSolver {
      * @property {'ReCaptchaV3EnterpriseTask'} type
      * @property {String} websiteURL Web address of the website using ReCaptcha, generally it's fixed value. (Ex: https://google.com)
      * @property {String} websiteKey The domain public key, rarely updated. (Ex: b989d9e8-0d14-41sda0-870f-97b5283ba67d)
-     * @property {String} pageAction Widget action value. Website owner defines what user is doing on the page through this parameter. Example: grecaptcha.execute('site_key', {action:'login}).
+     * @property {String} [pageAction] Widget action value. You can find the value of the action parameter by searching for grecaptcha.execute
      * @property {String} proxy Read about using proxies at https://docs.capsolver.com/guide/api-how-to-use-proxy.html
-     * @property {Object} enterprisePayload Enterprise payload
-     * @property {String} apiDomain Domain address from which to load reCAPTCHA Enterprise. For example: http://www.google.com/ or http://www.recaptcha.net/. Don't use a parameter if you don't know why it's needed.
+     * @property {Object} [enterprisePayload] For the enterprise version, search for grecaptcha.enterprise.render and pass the s parameter
+     * @property {Boolean} [isSession] Session mode, when enabled, will return a recaptcha-ca-t value, which is used as a cookie
+     * @property {String} [apiDomain] Domain address from which to load reCAPTCHA Enterprise. For example: http://www.google.com/ or http://www.recaptcha.net/. Don't use a parameter if you don't know why it's needed.
      * @property {Cookie[]} [cookies] Learn using cookies: https://docs.capsolver.com/en/guide/api-how-to-use-cookies/
      */
     /**
@@ -190,9 +195,10 @@ class CapSolver {
      * @property {'ReCaptchaV3EnterpriseTaskProxyLess'} type
      * @property {String} websiteURL Web address of the website using ReCaptcha, generally it's fixed value. (Ex: https://google.com)
      * @property {String} websiteKey The domain public key, rarely updated. (Ex: b989d9e8-0d14-41sda0-870f-97b5283ba67d)
-     * @property {String} pageAction Widget action value. Website owner defines what user is doing on the page through this parameter. Example: grecaptcha.execute('site_key', {action:'login}).
-     * @property {Object} enterprisePayload Enterprise payload
-     * @property {String} apiDomain Domain address from which to load reCAPTCHA Enterprise. For example: http://www.google.com/ or http://www.recaptcha.net/. Don't use a parameter if you don't know why it's needed.
+     * @property {String} [pageAction] Widget action value. You can find the value of the action parameter by searching for grecaptcha.execute
+     * @property {Object} [enterprisePayload] For the enterprise version, search for grecaptcha.enterprise.render and pass the s parameter
+     * @property {Boolean} [isSession] Session mode, when enabled, will return a recaptcha-ca-t value, which is used as a cookie
+     * @property {String} [apiDomain] Domain address from which to load reCAPTCHA Enterprise. For example: http://www.google.com/ or http://www.recaptcha.net/. Don't use a parameter if you don't know why it's needed.
      * @property {Cookie[]} [cookies] Learn using cookies: https://docs.capsolver.com/en/guide/api-how-to-use-cookies/
      */
     /**
@@ -202,29 +208,48 @@ class CapSolver {
      * @typedef {(ReCaptchaV2|ReCaptchaV3)} ReCaptcha
      */
     /**
-     * @typedef {Object} MTCaptcha
-     * @property {'MTCaptcha'} type
+     * @typedef {Object} MtCaptchaTask
+     * @property {'MtCaptchaTask'} type
      * @property {String} websiteURL Web address of the website using MTCaptcha, generally it's fixed value. (Ex: https://google.com)
      * @property {String} websiteKey The domain public key, rarely updated. (Ex: sk=MTPublic-xxx public key)
      * @property {String} proxy Read about using proxies at https://docs.capsolver.com/guide/api-how-to-use-proxy.html
      */
     /**
+     * @typedef {Object} MtCaptchaTaskProxyLess
+     * @property {'MtCaptchaTaskProxyLess'} type
+     * @property {String} websiteURL Web address of the website using MTCaptcha, generally it's fixed value. (Ex: https://google.com)
+     * @property {String} websiteKey The domain public key, rarely updated. (Ex: sk=MTPublic-xxx public key)
+     */
+    /**
+     * @typedef {(MtCaptchaTask|MtCaptchaTaskProxyLess)} MTCaptcha
+     */
+    /**
      * @typedef {Object} DatadomeSlider
      * @property {'DatadomeSliderTask'} type
-     * @property {String} websiteURL The address of the target page.
      * @property {String} captchaUrl if the url contains t=bv that means that your ip must be banned, t should be t=fe
+     * @property {String} userAgent You need to keep your userAgent consistent with the one used to request the captchaUrl. Currently, we only support specific Chrome user agents (Chrome 133-140).
      * @property {String} proxy Read about using proxies at https://docs.capsolver.com/guide/api-how-to-use-proxy.html
-     * @property {String} userAgent You need to keep your userAgent consistent with the one used to request the captchaUrl. Currently, we only support two fixed userAgents.
      */
 
     /**
-     * @typedef {Object} AntiCloudflare
+     * @typedef {Object} AntiTurnstileTask
      * @property {'AntiTurnstileTaskProxyLess'} type
      * @property {String} websiteURL The address of the target page.
      * @property {String} websiteKey Turnstile website key.
      * @property {Object} [metadata] Turnstile extra data. Turnstile Documentation: https://developers.cloudflare.com/turnstile/get-started/client-side-rendering/
      * @property {String} [metadata.action] The value of the data-action attribute of the Turnstile element if it exists.
      * @property {String} [metadata.cdata] The value of the data-cdata attribute of the Turnstile element if it exists.
+     */
+
+    /**
+     * @typedef {Object} AntiCloudflareTask
+     * @property {'AntiCloudflareTask'} type
+     * @property {String} websiteURL The address of the target page.
+     * @property {String} proxy Read about using proxies at https://docs.capsolver.com/guide/api-how-to-use-proxy.html
+     */
+
+    /**
+     * @typedef {(AntiTurnstileTask|AntiCloudflareTask)} AntiCloudflare
      */
 
     /**
@@ -235,6 +260,10 @@ class CapSolver {
      * @property {String} [awsIv] When the status code returned by the websiteURL page is 405, awsIv is required
      * @property {String} [awsContext] When the status code returned by the websiteURL page is 405, awsContext is required
      * @property {String} [awsChallengeJS] When the status code returned by the websiteURL page is 405 or 202, awsChallengeJs is required
+     * @property {String} [awsApiJs] The jsapi.js link returned by the captcha page
+     * @property {String} [awsProblemUrl] The problem endpoint url containing keywords like problem, num_solutions_required, etc.
+     * @property {String} [awsApiKey] The api_key value of the problem endpoint
+     * @property {String} [awsExistingToken] The aws-waf-token used for the last verification
      * @property {String} [proxy] Read about using proxies at https://docs.capsolver.com/guide/api-how-to-use-proxy.html
      */
 
@@ -266,7 +295,7 @@ class CapSolver {
      * @typedef {(ImageToTextTask|ReCaptchaV2Classification|AwsWafClassification|VisionEngine)} RecognitionTask
      */
     /**
-     * @typedef {(GeeTest|ReCaptcha|MTCaptcha|DatadomeSlider|AntiCloudflare|AwsWafCaptcha|FriendlyCaptcha|YandexCaptcha)} TokenTask
+     * @typedef {(GeeTest|ReCaptcha|MTCaptcha|DatadomeSlider|AntiTurnstileTask|AntiCloudflareTask|AntiCloudflare|AwsWafCaptcha|FriendlyCaptcha|YandexCaptcha)} TokenTask
      */
     /**
      * @typedef {(RecognitionTask|TokenTask)} CapSolverTask
@@ -374,6 +403,34 @@ class CapSolver {
                 appId: this.#options.appId || '6B27D516-3A6F-4E13-9DED-F517295F5F89',
                 taskId,
                 result,
+            }),
+        });
+        return JSON.parse(response.data);
+    }
+
+    /**
+     * @typedef CapSolverGetTokenResponse
+     * @property {(0|1)} errorId Error message: 0 - no error, 1 - with error
+     * @property {String} errorCode https://docs.capsolver.com/guide/api-error.html
+     * @property {String} errorDescription Error description
+     * @property {"ready"} status returns the status, which is always ready for this endpoint
+     * @property {Object} solution
+     * @property {String} taskId ID of the created task
+     */
+    /**
+     * Get token directly for solving selected captcha type (supports ReCaptchaV2/V3 and Enterprise versions)
+     * @param {CapSolverTask} task
+     * @returns {Promise<CapSolverGetTokenResponse>}
+     */
+    async getToken(task) {
+        PreProcessTask(task);
+        const response = await this.#client.request({
+            method: 'POST',
+            url: '/getToken',
+            data: JSON.stringify({
+                clientKey: this.#clientKey,
+                appId: this.#options.appId || '6B27D516-3A6F-4E13-9DED-F517295F5F89',
+                task,
             }),
         });
         return JSON.parse(response.data);
