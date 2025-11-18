@@ -2,6 +2,8 @@
 
 ## An API wrapper for CapSolver.com written in Node.js
 
+Get an API Key at [CapSolver.com](https://dashboard.capsolver.com/passport/register?inviteCode=a69MEYLUmBzZ).
+
 ## Table of Contents
 
 - [Installing](#installing)
