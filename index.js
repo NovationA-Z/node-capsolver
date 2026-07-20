@@ -1,12 +1,17 @@
 const { Axios } = require('axios');
 
-// This function will be called before the task is sent to the server. It will itterate through each property, and convert buffers into base64 strings
+// This function will be called before the task is sent to the server. It returns a copy of the task with buffers (including buffers inside arrays, e.g. `images`) converted into base64 strings
 function PreProcessTask(task) {
-    for (const key in task) {
-        if (task[key] instanceof Buffer) {
-            task[key] = task[key].toString('base64');
+    const processed = { ...task };
+    for (const key in processed) {
+        const value = processed[key];
+        if (value instanceof Buffer) {
+            processed[key] = value.toString('base64');
+        } else if (Array.isArray(value)) {
+            processed[key] = value.map((item) => (item instanceof Buffer ? item.toString('base64') : item));
         }
     }
+    return processed;
 }
 
 class CapSolver {
@@ -44,7 +49,7 @@ class CapSolver {
     constructor(clientKey, options) {
         this.#clientKey = clientKey;
         this.#options = options || {};
-        this.#delay = this.#options.delay || 2500;
+        this.#delay = this.#options.delay ?? 2500;
         this.#client = new Axios({
             baseURL: this.#options.apiUrl || 'https://api.capsolver.com',
             headers: {
@@ -53,14 +58,28 @@ class CapSolver {
         });
     }
 
+    // The raw Axios class resolves on any status code, so non-2xx and non-JSON responses (e.g. HTML error pages) must be handled here
+    async #request(url, payload) {
+        const response = await this.#client.request({
+            method: 'POST',
+            url,
+            data: JSON.stringify(payload),
+        });
+        try {
+            return JSON.parse(response.data);
+        } catch {
+            throw new Error(`CapSolver returned an invalid response (HTTP ${response.status}): ${String(response.data).slice(0, 200)}`);
+        }
+    }
+
     /**
      * @typedef {Object} ImageToTextTask
      * @property {'ImageToTextTask'} type
      * @property {String|import('buffer').Buffer} [body] base64 encoded content of the image (no newlines, no data:image/***;charset=utf-8;base64,)
      * @property {String} [websiteURL] Page source url to improve accuracy
      * @property {(String|import('buffer').Buffer)[]} [images] Only for number module, Support up to 9 base64 encoded images each time
-     * @property {('common'|'number'|'module_001'|'module_002'|'module_003'|'module_004'|'module_005'|'module_006'|'module_007'|'module_008'|'module_010'|'module_012'|'module_013'|'module_014'|'module_015'|'module_016'|'module_017'|'module_018'|'module_019'|'module_020'|'module_021'|'module_022'|'module_023'|'module_024'|'module_025'|'module_026'|'module_027'|'module_028'|'module_029'|'module_030'|'module_031'|'module_032')} [module] Specifies the module
-     * @property {Number} [score] 0.8 ~ 1, Identify the matching degree. If the recognition rate is not within the range, no deduction
+     * @property {('common'|'common2'|'number'|'module_001'|'module_002'|'module_003'|'module_004'|'module_005'|'module_006'|'module_007'|'module_008'|'module_010'|'module_012'|'module_013'|'module_014'|'module_015'|'module_016'|'module_017'|'module_018'|'module_019'|'module_020'|'module_021'|'module_022'|'module_023'|'module_024'|'module_025'|'module_026'|'module_027'|'module_028'|'module_029'|'module_030'|'module_031'|'module_032')} [module] Specifies the module
+     * @property {Number} [score] Deprecated, no longer part of the CapSolver API documentation
      */
     /**
      * @typedef {Object} ReCaptchaV2Classification
@@ -80,11 +99,11 @@ class CapSolver {
     /**
      * @typedef {Object} VisionEngine
      * @property {('VisionEngine')} type
-     * @property {('slider_1'|'rotate_1'|'rotate_2'|'shein'|'space_detection'|'slider_temu_plus'|'select_temu')} module All supported models are shown in the table below
+     * @property {('slider_1'|'rotate_1'|'rotate_2'|'shein'|'ocr_gif'|'space_detection'|'slider_temu_plus'|'select_temu')} module All supported models are shown in the table at https://docs.capsolver.com/en/guide/recognition/VisionEngine/ (space_detection, slider_temu_plus and select_temu are deprecated and no longer documented)
      * @property {String} [websiteURL] Page source url to improve accuracy
      * @property {String} image Base64 encoded content of the image (no newlines, no data:image/***;charset=utf-8;base64,)
-     * @property {String} [imageBackground] Base64 encoded content of the background image (no newlines, no data:image/***;charset=utf-8;base64,)
-     * @property {String} [question] Space detection requires
+     * @property {String} [imageBackground] Base64 encoded content of the background image (no newlines, no data:image/***;charset=utf-8;base64,), required for slider_1 and rotate_1
+     * @property {String} [question] Only the shein module requires
      */
 
     /**
@@ -105,6 +124,7 @@ class CapSolver {
      * @property {String} value
      */
     /**
+     * @deprecated Removed from the CapSolver API documentation, use ReCaptchaV2TaskProxyLess or the Enterprise variants instead
      * @typedef {Object} ReCaptchaV2Task
      * @property {('ReCaptchaV2Task')} type
      * @property {String} websiteURL Web address of the website using ReCaptcha, generally it's fixed value. (Ex: https://google.com)
@@ -124,6 +144,7 @@ class CapSolver {
      * @property {String} websiteKey The domain public key, rarely updated. (Ex: b989d9e8-0d14-41sda0-870f-97b5283ba67d)
      * @property {String} [pageAction] For ReCaptchaV2, if there is an sa parameter in the payload of the /anchor endpoint, please submit its value
      * @property {String} [recaptchaDataSValue] For ReCaptchaV2 normal version, if there is an s parameter in the payload of the /anchor endpoint, please submit its value
+     * @property {Object} [enterprisePayload] For the enterprise version, if there is an s parameter in the payload of the /anchor endpoint, please submit its value
      * @property {Boolean} [isInvisible] if recaptcha don't have pageAction, reload request body content flag have "fi"
      * @property {Boolean} [isSession] Session mode, when enabled, will return a recaptcha-ca-t value, which is used as a cookie
      * @property {String} [apiDomain] The domain name for loading the captcha. (Ex: http://www.google.com/ or http://www.recaptcha.net/)
@@ -227,7 +248,7 @@ class CapSolver {
      * @typedef {Object} DatadomeSlider
      * @property {'DatadomeSliderTask'} type
      * @property {String} captchaUrl if the url contains t=bv that means that your ip must be banned, t should be t=fe
-     * @property {String} userAgent You need to keep your userAgent consistent with the one used to request the captchaUrl. Currently, we only support specific Chrome user agents (Chrome 133-140).
+     * @property {String} userAgent You need to keep your userAgent consistent with the one used to request the captchaUrl. Currently, we only support specific Chrome user agents (Chrome 137-149).
      * @property {String} proxy Read about using proxies at https://docs.capsolver.com/guide/api-how-to-use-proxy.html
      */
 
@@ -245,7 +266,9 @@ class CapSolver {
      * @typedef {Object} AntiCloudflareTask
      * @property {'AntiCloudflareTask'} type
      * @property {String} websiteURL The address of the target page.
-     * @property {String} proxy Read about using proxies at https://docs.capsolver.com/guide/api-how-to-use-proxy.html
+     * @property {String} proxy Your static or sticky proxy, read about using proxies at https://docs.capsolver.com/guide/api-how-to-use-proxy.html
+     * @property {String} [userAgent] The user-agent you used to request the target website. Only Chrome's userAgent is supported.
+     * @property {String} [html] The response of requesting the target website, it usually contains "Just a moment..." and status code is 403
      */
 
     /**
@@ -268,6 +291,7 @@ class CapSolver {
      */
 
     /**
+     * @deprecated Removed from the CapSolver API documentation
      * @typedef {Object} FriendlyCaptcha
      * @property {'FriendlyCaptchaTaskProxyless'} type
      * @property {String} websiteURL The page address, where the Friendly Captcha is solved
@@ -275,6 +299,7 @@ class CapSolver {
      */
 
     /**
+     * @deprecated Removed from the CapSolver API documentation
      * @typedef {Object} YandexCaptcha
      * @property {'YandexCaptchaTaskProxyLess'} type
      * @property {String} websiteURL The page address, where the Yandex Captcha is solved
@@ -307,20 +332,25 @@ class CapSolver {
      * @property {String} errorCode https://docs.capsolver.com/guide/api-error.html
      * @property {String} errorDescription Short description of the error
      * @property {Number} balance Balance in USD
-     * @property {any[]} packages List of Monthly/Weekly Packages
+     * @property {CapSolverPackage[]} packages List of Monthly/Weekly Packages
      */
     /**
-     * @returns {CapSolverBalanceResponse}
+     * @typedef {Object} CapSolverPackage
+     * @property {String} packageId
+     * @property {Number} type
+     * @property {String} title
+     * @property {Number} numberOfCalls
+     * @property {Number} status
+     * @property {String} token
+     * @property {Number} expireTime
+     */
+    /**
+     * @returns {Promise<CapSolverBalanceResponse>}
      */
     async getBalance() {
-        const response = await this.#client.request({
-            method: 'POST',
-            url: '/getBalance',
-            data: JSON.stringify({
-                clientKey: this.#clientKey,
-            }),
+        return await this.#request('/getBalance', {
+            clientKey: this.#clientKey,
         });
-        return JSON.parse(response.data);
     }
 
     /**
@@ -328,26 +358,20 @@ class CapSolver {
      * @property {(0|1)} errorId Error message: 0 - no error, 1 - with error
      * @property {String} errorCode https://docs.capsolver.com/guide/api-error.html
      * @property {String} errorDescription Error description
-     * @property {"ready"|null} status returns the status, which can only be null or ready
-     * @property {Object} solution
+     * @property {("idle"|"ready"|null)} status idle for asynchronous (token) tasks, ready for synchronous (recognition) tasks
+     * @property {Object} solution Only returned for synchronous tasks
      * @property {String} taskId ID of the created task
      */
     /**
      * @param {CapSolverTask} task
-     * @returns {CapSolverCreateTaskResponse}
+     * @returns {Promise<CapSolverCreateTaskResponse>}
      */
     async createTask(task) {
-        PreProcessTask(task);
-        const response = await this.#client.request({
-            method: 'POST',
-            url: '/createTask',
-            data: JSON.stringify({
-                clientKey: this.#clientKey,
-                appId: this.#options.appId || '6B27D516-3A6F-4E13-9DED-F517295F5F89',
-                task,
-            }),
+        return await this.#request('/createTask', {
+            clientKey: this.#clientKey,
+            appId: this.#options.appId || '6B27D516-3A6F-4E13-9DED-F517295F5F89',
+            task: PreProcessTask(task),
         });
-        return JSON.parse(response.data);
     }
 
     /**
@@ -355,23 +379,19 @@ class CapSolver {
      * @property {(0|1)} errorId Error message: 0 - no error, 1 - with error
      * @property {String} errorCode https://docs.capsolver.com/guide/api-error.html
      * @property {String} errorDescription Error description
-     * @property {"ready"|null} status returns the status, which can only be null or ready
-     * @property {Object} solution
+     * @property {("idle"|"processing"|"ready"|"failed")} status idle - waiting, processing - under identification, ready - result is in the solution parameter, failed - task failed
+     * @property {String} taskId ID of the task
+     * @property {Object} solution Task result data, present when status is ready
      */
     /**
      * @param {String} taskId
      * @returns {Promise<CapSolverGetTaskResultResponse>}
      */
     async getTaskResult(taskId) {
-        const response = await this.#client.request({
-            method: 'POST',
-            url: '/getTaskResult',
-            data: JSON.stringify({
-                clientKey: this.#clientKey,
-                taskId,
-            }),
+        return await this.#request('/getTaskResult', {
+            clientKey: this.#clientKey,
+            taskId,
         });
-        return JSON.parse(response.data);
     }
 
     /**
@@ -390,22 +410,18 @@ class CapSolver {
      */
 
     /**
+     * @deprecated The /feedbackTask endpoint is no longer part of the CapSolver API documentation
      * @param {String} taskId
      * @param {FeedbackTaskResult} result
      * @returns {Promise<CapSolverFeedbackTaskResponse>}
      */
     async feedbackTask(taskId, result) {
-        const response = await this.#client.request({
-            method: 'POST',
-            url: '/feedbackTask',
-            data: JSON.stringify({
-                clientKey: this.#clientKey,
-                appId: this.#options.appId || '6B27D516-3A6F-4E13-9DED-F517295F5F89',
-                taskId,
-                result,
-            }),
+        return await this.#request('/feedbackTask', {
+            clientKey: this.#clientKey,
+            appId: this.#options.appId || '6B27D516-3A6F-4E13-9DED-F517295F5F89',
+            taskId,
+            result,
         });
-        return JSON.parse(response.data);
     }
 
     /**
@@ -419,21 +435,15 @@ class CapSolver {
      */
     /**
      * Get token directly for solving selected captcha type (supports ReCaptchaV2/V3 and Enterprise versions)
-     * @param {CapSolverTask} task
+     * @param {ReCaptcha} task
      * @returns {Promise<CapSolverGetTokenResponse>}
      */
     async getToken(task) {
-        PreProcessTask(task);
-        const response = await this.#client.request({
-            method: 'POST',
-            url: '/getToken',
-            data: JSON.stringify({
-                clientKey: this.#clientKey,
-                appId: this.#options.appId || '6B27D516-3A6F-4E13-9DED-F517295F5F89',
-                task,
-            }),
+        return await this.#request('/getToken', {
+            clientKey: this.#clientKey,
+            appId: this.#options.appId || '6B27D516-3A6F-4E13-9DED-F517295F5F89',
+            task: PreProcessTask(task),
         });
-        return JSON.parse(response.data);
     }
 
     /**
@@ -441,7 +451,7 @@ class CapSolver {
      * @property {(0|1)} errorId Error message: 0 - no error, 1 - with error
      * @property {String} errorCode https://docs.capsolver.com/guide/api-error.html
      * @property {String} errorDescription Error description
-     * @property {"ready"|null} status returns the status, which can only be null or ready
+     * @property {("idle"|"processing"|"ready"|"failed"|null)} status Status of the task, ready when solved
      * @property {Object} solution
      * @property {String} taskId ID of the created task
      */
@@ -466,7 +476,7 @@ class CapSolver {
 
         while (true) {
             const result = await this.getTaskResult(taskId);
-            if (result.status === 'ready' || result.errorId === 1) {
+            if (result.status === 'ready' || result.status === 'failed' || result.errorId === 1) {
                 const verboseMessage = result?.status === 'ready' ? `Solved!` : `Failed!`;
                 this.verbose(`[${taskId}] ${verboseMessage}`);
 
