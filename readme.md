@@ -106,7 +106,7 @@ In general, the `CapSolver.solve()` function is all you need. It combines create
 
 `async CapSolver.getToken(task)`
 
-`async CapSolver.feedbackTask(taskId, result)`
+`async CapSolver.feedbackTask(taskId, result)` (deprecated, the endpoint is no longer part of the CapSolver API documentation)
 
 `async CapSolver.getBalance()`
 
