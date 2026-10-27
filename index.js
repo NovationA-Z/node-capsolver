@@ -34,7 +34,7 @@ class CapSolver {
      * @property {String} [appId] Your developer appId from dashboard's developer section
      * @property {Boolean} [verbose=false] Whether to print the current status
      * @property {String} [verboseIdentifier] The identifier of the current instance, used to distinguish between multiple instances
-     * @property {'https://api.capsolver.com'|'https://api-stable.capsolver.com'} [apiUrl='https://api.capsolver.com'] The API URL to use
+     * @property {String} [apiUrl='https://api.capsolver.com'] The API URL to use, e.g. 'https://api-stable.capsolver.com' or another CapSolver-compatible service (see "Compatible services" in the readme)
      * @property {Number} [delay=2500] The delay between each status check in milliseconds
      */
     /**
