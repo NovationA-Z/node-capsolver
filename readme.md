@@ -8,6 +8,7 @@ Get an API Key at [CapSolver.com](https://dashboard.capsolver.com/passport/regis
 
 - [Installing](#installing)
 - [Examples](#examples)
+- [Compatible services](#compatible-services)
 - [API](#api)
 
 ## Installing
@@ -93,6 +94,28 @@ const { JSDOM } = require('jsdom');
     }
 })();
 ```
+
+## Compatible services
+
+Set `apiUrl` to use another service that offers the CapSolver-style `createTask` / `getTaskResult` / `getBalance` API. For example, [Solvecha](https://solvecha.com/docs) solves pictures and text (`ImageToTextTask`, `ReCaptchaV2Classification`):
+
+```js
+const CapSolver = require('node-capsolver')
+const fs = require('fs')
+
+const solver = new CapSolver("YOUR_API_KEY", {
+    apiUrl: "https://api.solvecha.com"
+})
+
+solver.solve({
+    type: "ImageToTextTask",
+    body: fs.readFileSync('captcha.png')
+}).then((task) => {
+    console.log(task.solution.text)
+})
+```
+
+Solvecha supports image and text tasks only. Token tasks (for example `ReCaptchaV2TaskProxyLess`, hCaptcha, Turnstile, GeeTest, FunCAPTCHA, AWS WAF) are not supported by it. `getBalance()` returns the prepaid balance of the service.
 
 ## API
 
